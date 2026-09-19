@@ -1,0 +1,60 @@
+# Terms a seat mandate must never contain. One extended-regex per line;
+# matched case-insensitively with word boundaries against mandates/.
+# Append every proper noun, path segment, field name, code and test-id from
+# the SPEC on kickoff day.
+#
+# --- track and product names ---
+pocketful
+tablekeeper
+venmo
+opentable
+# --- domain nouns: money track ---
+wallet
+payment
+payout
+money
+funds
+balance
+ledger
+cents
+currency
+transfer
+transaction
+debit
+credit
+# --- domain nouns: reservation track ---
+restaurant
+reservation
+reserve
+booking
+diner
+party size
+seating
+covers
+# --- interface detail that belongs in the task, not a mandate ---
+endpoint
+data-testid
+testid
+idempotency
+idempotent
+HTTP
+REST
+# --- stack detail: a mandate must outlive the stack ---
+node
+npm
+javascript
+python
+sqlite
+docker
+dockerfile
+container
+
+## case-sensitive
+# Matched exactly as written, so ordinary English words ("post", "get") are
+# not false positives while the all-caps method names still are.
+GET
+POST
+PUT
+PATCH
+DELETE
+OPTIONS

@@ -1,0 +1,13 @@
+# BAND / Jam local state — never commit
+.jam/
+agent_config.yaml
+*.key
+.env
+.env.*
+node_modules/
+*.db
+*.db-wal
+*.db-shm
+data/
+.DS_Store
+recordings/
