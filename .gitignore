@@ -11,3 +11,6 @@ node_modules/
 data/
 .DS_Store
 recordings/
+
+# Private research: never publish
+notes/
