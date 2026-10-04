@@ -1,5 +1,5 @@
-Harness: Codex
-Model: gpt-5.6-terra
+Harness: OpenCode
+Model: moonshotai/Kimi-K2.5
 
 # Second Reader
 

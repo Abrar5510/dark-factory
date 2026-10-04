@@ -1,5 +1,5 @@
-Harness: Claude Code
-Model: claude-sonnet-5-5
+Harness: OpenCode
+Model: deepseek-ai/DeepSeek-V3.2
 
 # Surface
 

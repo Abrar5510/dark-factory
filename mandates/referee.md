@@ -1,5 +1,5 @@
-Harness: Claude Code
-Model: claude-haiku-4-5-20251001
+Harness: OpenCode
+Model: deepseek-ai/DeepSeek-V3.2
 
 # Referee
 

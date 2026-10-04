@@ -1,5 +1,5 @@
-Harness: Claude Code
-Model: claude-opus-5-5
+Harness: OpenCode
+Model: deepseek-ai/DeepSeek-V3.2
 
 # Lead
 
