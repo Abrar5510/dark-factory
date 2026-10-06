@@ -11,3 +11,18 @@ node_modules/
 data/
 .DS_Store
 recordings/
+
+# Private research: never publish
+notes/
+
+# Copied by deploy.sh
+site/*.md
+site/mandates/
+.wrangler/
+
+.dev.vars*
+!.dev.vars.example
+!.env.example
+.dev.vars
+agent_config.yaml
+*.pem

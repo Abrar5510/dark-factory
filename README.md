@@ -1,63 +1,44 @@
-# Dark Factory — BAND hackathon submission
+# Double-Blind — a dark factory
 
-A band of three coding-agent seats that plans work, implements it, hands off
-evidence, and checks its own results. Built in a BAND Desktop room.
+**Team:** Abrar Ahmad
+**Track:** pocketful
+**Video:** linked from the lablab submission page
+**Slides:** `Double-Blind-presentation.pdf`
 
-**Track:** pocketful — the hard part is that value is never created, destroyed
-or spent twice under concurrency, retries and rounding.
+Five coding-agent seats take a written specification and build the service with no
+human input after the task is dispatched. Two of the seats read the specification
+blind to each other: one builds the service, the other builds an executable reference
+of it on a different model family. A referee compares the two, and the lead settles
+each disagreement by quoting the specification word for word.
 
-| What | Where |
+## How to read this repository
+
+| Path | What it is |
 |---|---|
-| The factory, and how to stand it up elsewhere | [FACTORY.md](FACTORY.md) |
-| Seat mandates (generic by rule) | [mandates/](mandates/) |
-| The room the band worked in | [room-export/](room-export/) |
-| Per-stage verification evidence | [evidence/](evidence/) |
-| The stages | `stage-1/` … `stage-4/` |
-| Video walkthrough | _link added at submission_ |
+| `FACTORY.md` | The factory: seats, design choices, what failed, what it cost, how bad work gets caught. **Start here.** |
+| `mandates/` | One standing instruction per seat. Each opens with the harness and model the seat runs. |
+| `stage-N/` | One complete, buildable service per finished stage: `Dockerfile`, `RUN.md`, source. |
+| `verification/` | The Second Reader's conformance kit, written without sight of the service. |
+| `room.json` | The full room export from Band. The handoffs, rulings and usage are in here. |
 
-Each stage folder is a complete, standalone service. A stage is graded against
-every suite up to its own number, so each folder holds that stage's answer and
-not a later one.
+**Stage reached: none.** The submitted run did not complete stage 1: `stage-1/` does not
+compile, the harness scores it stage 0, and `harness check` fails gate 2. `FACTORY.md`
+says exactly what happened and why.
 
-## Running a stage
+## Run a stage
 
-Nothing to install: the service uses only the Node standard library, so the
-image builds and runs with the network switched off.
+Follow `stage-N/RUN.md`. To grade it the way the judges do, from the kickoff
+repository:
 
-```bash
-cd stage-1 && node server.js      # listens on $PORT, default 3000
-curl localhost:3000/health
+```sh
+python -m harness check --track pocketful /path/to/this/repo
+python -m harness run --track pocketful --repo /path/to/this/repo --all --mode isolated --out /tmp/df-check
 ```
 
-```bash
-cd stage-1 && npm test            # the project's check command
-```
+## What a human did
 
-In a clean, isolated container, which is how it is graded:
-
-```bash
-scripts/offline-build.sh stage-1
-```
-
-That builds with `--network=none`, runs with no network under a CPU and memory
-cap, waits for the service to answer, and runs the checks inside that same
-container.
-
-## Repository layout
-
-```
-mandates/      one standing instruction per seat; names nothing domain-specific
-scripts/       check-mandates.sh · offline-build.sh · snapshot-stage.sh
-service/       the working copy the band builds in
-stage-N/       frozen snapshot of the service as it stood when stage N passed
-evidence/      what the checking seat ran, and what it saw, per stage
-room-export/   export of the BAND Desktop room
-```
-
-## Checks anyone can re-run
-
-```bash
-scripts/check-mandates.sh --selftest   # the guard itself is checked
-scripts/check-mandates.sh              # no mandate names this track or stack
-scripts/offline-build.sh service       # builds, starts and passes with no network
-```
+Wrote `mandates/`, `README.md` and `FACTORY.md`, and sent one message to `@Lead`.
+Everything under `stage-*/` and `verification/` was written by the seats. A human
+copied `verification/` in from the Second Reader's repository and added `room.json`,
+because the run was stopped before the Lead did so. All four seat commits are
+authored by Lead; see `FACTORY.md` for why that is a weakness.
