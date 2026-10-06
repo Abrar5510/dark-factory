@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Dark Factory</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5/400.css">
+<style>
+:root{
+  --bg:#f6f7f8;--surface:#ffffff;--line:#dfe3e7;--text:#14171a;--muted:#59616a;
+  --accent:#047857;--on-accent:#ffffff;--danger:#b42318;--wash:#04785714;
+  --r:12px;--ease:cubic-bezier(.16,1,.3,1);
+  --sans:"Geist Sans",ui-sans-serif,system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0d0e10;--surface:#141618;--line:#24282c;--text:#e9ebed;--muted:#9ba2aa;
+  --accent:#34d399;--on-accent:#04130c;--danger:#f97066;--wash:#34d39916;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+.app{max-width:1200px;margin:0 auto;min-height:100dvh;padding:48px 20px;display:grid;gap:48px;grid-template-columns:1fr}
+@media(min-width:900px){.app{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:72px;padding:72px 32px}}
+.panel{align-self:start}
+@media(min-width:900px){.panel{position:sticky;top:72px}}
+h1{font-weight:600;font-size:clamp(2.25rem,5vw,3.5rem);line-height:1;letter-spacing:-.04em;margin:0 0 16px}
+.lede{color:var(--muted);max-width:40ch;margin:0 0 32px}
+label{display:block;font-weight:600;font-size:14px;margin-bottom:8px}
+.help{font-size:13px;color:var(--muted);margin:6px 0 0}
+textarea,input{width:100%;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;transition:border-color .2s,box-shadow .2s}
+textarea{resize:vertical;min-height:140px}
+textarea::placeholder,input::placeholder{color:var(--muted)}
+textarea:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.field{margin-bottom:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{font:inherit;font-size:13px;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:var(--r);padding:6px 12px;cursor:pointer;transition:border-color .2s,transform .2s var(--ease)}
+.chip:hover{border-color:var(--accent)}
+.chip:active{transform:scale(.97)}
+.run{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--sans);white-space:nowrap;color:var(--on-accent);background:var(--accent);border:0;border-radius:var(--r);padding:12px 22px;cursor:pointer;transition:transform .2s var(--ease),opacity .2s}
+.run:hover{opacity:.92}.run:active{transform:translateY(1px) scale(.98)}
+.run:disabled{opacity:.5;cursor:progress}
+.err{color:var(--danger);font-size:14px;margin:12px 0 0;min-height:1.4em}
+.status{font:400 13px var(--mono);color:var(--muted);margin:0 0 20px;min-height:1.4em}
+ol.rail{list-style:none;margin:0;padding:0}
+.seat{display:grid;grid-template-columns:40px 1fr;gap:16px;position:relative;padding-bottom:28px}
+.seat:last-child{padding-bottom:0}
+.seat::before{content:"";position:absolute;left:19px;top:40px;bottom:0;width:1px;background:var(--line)}
+.seat:last-child::before{display:none}
+.node{width:40px;height:40px;border-radius:var(--r);display:grid;place-items:center;font-size:20px;border:1px solid var(--line);background:var(--surface);color:var(--muted);transition:all .3s var(--ease)}
+.seat[data-state=working] .node{color:var(--accent);border-color:var(--accent);background:var(--wash)}
+.seat[data-state=done] .node{color:var(--on-accent);border-color:var(--accent);background:var(--accent)}
+.seat[data-state=error] .node{color:var(--danger);border-color:var(--danger)}
+.head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.name{font-weight:600}
+.role{color:var(--muted);font-size:14px}
+.grp{font:400 12px var(--mono);color:var(--muted);margin:0 0 6px 56px}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--muted);font-size:14px;width:max-content}
+summary:hover{color:var(--text)}
+.out{margin-top:10px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);font-size:14px;overflow-x:auto;animation:in .5s var(--ease)}
+.out>:first-child{margin-top:0}.out>:last-child{margin-bottom:0}
+.out pre{background:var(--bg);padding:12px;border-radius:8px;overflow-x:auto;font:13px/1.5 var(--mono)}
+.out code{font-family:var(--mono);font-size:.9em}
+.out table{border-collapse:collapse;display:block;overflow-x:auto}
+.out td,.out th{border:1px solid var(--line);padding:4px 8px}
+.skel{margin-top:12px;display:grid;gap:8px}
+.skel i{display:block;height:10px;border-radius:6px;background:linear-gradient(90deg,var(--line),var(--wash),var(--line));background-size:200% 100%;animation:sh 1.4s linear infinite}
+.skel i:nth-child(1){width:92%}.skel i:nth-child(2){width:78%}.skel i:nth-child(3){width:55%}
+.seat[data-state=working] .node i{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.idle{color:var(--muted);font-size:14px;margin:4px 0 0}
+.fail{color:var(--danger);font-size:14px;margin:8px 0 0}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes sh{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="panel" aria-labelledby="t">
+    <h1 id="t">Dark Factory</h1>
+    <p class="lede">Give the band a task. Five seats build it, cross-check each other, and rule on every disagreement.</p>
+    <form id="f">
+      <div class="field">
+        <label for="task">Task</label>
+        <textarea id="task" maxlength="4000" required placeholder="Describe the service you want built"></textarea>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="field">
+        <label for="code">Access code</label>
+        <input id="code" type="password" autocomplete="off">
+        <p class="help">Needed to start a run.</p>
+      </div>
+      <button class="run" id="go" type="submit"><i class="ph ph-play" aria-hidden="true"></i>Run the factory</button>
+      <p class="err" id="err" role="alert"></p>
+    </form>
+  </section>
+
+  <section>
+    <p class="status" id="status" aria-live="polite">Waiting for a task.</p>
+    <ol class="rail" id="rail" aria-label="Seats"></ol>
+  </section>
+</main>
+
+<script type="module">
+import {marked} from "https://cdn.jsdelivr.net/npm/marked@12/lib/marked.esm.js";
+import DOMPurify from "https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.es.mjs";
+
+const SEATS=[
+  {key:"lead1",seat:"Lead",label:"Lead",role:"Writes the handoff",icon:"compass"},
+  {key:"Builder",seat:"Builder",label:"Builder",role:"Writes the service",icon:"hammer",grp:"Work blind from the same handoff"},
+  {key:"Surface",seat:"Surface",label:"Surface",role:"Designs the interface",icon:"layout"},
+  {key:"Second Reader",seat:"Second Reader",label:"Second Reader",role:"Writes an independent reference",icon:"eye"},
+  {key:"Referee",seat:"Referee",label:"Referee",role:"Compares the results",icon:"scales"},
+  {key:"lead2",seat:"Lead",label:"Lead",role:"Rules on each divergence",icon:"gavel"},
+];
+const EXAMPLES=["A shared shopping list that syncs between phones","A URL shortener with click counts","A habit tracker with streaks and reminders"];
+const $=id=>document.getElementById(id);
+const rows={};
+
+function build(){
+  $("rail").innerHTML="";
+  for(const s of SEATS){
+    const li=document.createElement("li");
+    li.className="seat";li.dataset.state="idle";
+    if(s.grp){const g=document.createElement("p");g.className="grp";g.textContent=s.grp;$("rail").append(g)}
+    li.innerHTML=`<div class="node"><i class="ph ph-${s.icon}" aria-hidden="true"></i></div>
+      <div><div class="head"><span class="name">${s.label}</span><span class="role">${s.role}</span></div>
+      <p class="idle">Waiting</p></div>`;
+    $("rail").append(li);rows[s.key]=li;
+  }
+}
+function setState(key,state,text){
+  const li=rows[key],body=li.lastElementChild,icon=li.querySelector(".node i");
+  li.dataset.state=state;
+  body.querySelector(".idle,.skel,details,.fail")?.remove();
+  if(state==="working"){
+    body.insertAdjacentHTML("beforeend",`<div class="skel"><i></i><i></i><i></i></div>`);
+    icon.className="ph ph-circle-notch";
+  }else if(state==="done"){
+    icon.className="ph ph-check";
+    const d=document.createElement("details");d.open=key==="lead2";
+    d.innerHTML=`<summary>${key==="lead2"?"Final ruling":"Output"}</summary><div class="out"></div>`;
+    d.lastChild.innerHTML=DOMPurify.sanitize(marked.parse(text));
+    body.append(d);
+  }else if(state==="error"){
+    icon.className="ph ph-warning";
+    const p=document.createElement("p");p.className="fail";p.textContent=text;body.append(p);
+  }
+}
+
+$("chips").innerHTML=EXAMPLES.map(e=>`<button type="button" class="chip">${e}</button>`).join("");
+$("chips").onclick=e=>{if(e.target.matches(".chip")){$("task").value=e.target.textContent;$("task").focus()}};
+build();
+
+$("f").onsubmit=async ev=>{
+  ev.preventDefault();
+  $("err").textContent="";build();
+  $("go").disabled=true;$("status").textContent="Running. Each seat reports as it finishes.";
+  let leadSeen=0,failed=false;
+  const keyFor=seat=>seat==="Lead"?(leadSeen<=1?"lead1":"lead2"):seat;
+  try{
+    const r=await fetch("/api/run",{method:"POST",headers:{"x-access-code":$("code").value},body:JSON.stringify({task:$("task").value})});
+    if(!r.ok){$("err").textContent=r.status===401?"That access code is not right.":await r.text();$("status").textContent="Waiting for a task.";return}
+    const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
+    for(;;){
+      const{value,done}=await rd.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});const lines=buf.split("\n");buf=lines.pop();
+      for(const l of lines){
+        if(!l)continue;const e=JSON.parse(l);if(e.done)continue;
+        if(e.seat==="Lead"&&e.status==="working")leadSeen++;
+        const k=keyFor(e.seat);
+        if(e.status==="error")failed=true;
+        setState(k,e.status,e.text);
+      }
+    }
+    for(const[k,li]of Object.entries(rows))if(li.dataset.state==="working")setState(k,"error","Did not finish.");
+    $("status").textContent=failed?"Stopped early. See the failed seat.":"Finished. Open any seat to read its output.";
+  }catch(x){
+    $("err").textContent="Could not reach the factory. Try again.";$("status").textContent="Waiting for a task.";
+  }finally{$("go").disabled=false}
+};
+</script>
+</body>
+</html>
