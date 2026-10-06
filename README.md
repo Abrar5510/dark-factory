@@ -2,7 +2,8 @@
 
 **Team:** Abrar Ahmad
 **Track:** pocketful
-**Video:** TODO(after run)
+**Video:** linked from the lablab submission page
+**Slides:** `Double-Blind-presentation.pdf`
 
 Five coding-agent seats take a written specification and build the service with no
 human input after the task is dispatched. Two of the seats read the specification
@@ -20,7 +21,9 @@ each disagreement by quoting the specification word for word.
 | `verification/` | The Second Reader's conformance kit, written without sight of the service. |
 | `room.json` | The full room export from Band. The handoffs, rulings and usage are in here. |
 
-Stage reached: TODO(after run)
+**Stage reached: none.** The submitted run did not complete stage 1: `stage-1/` does not
+compile, the harness scores it stage 0, and `harness check` fails gate 2. `FACTORY.md`
+says exactly what happened and why.
 
 ## Run a stage
 
@@ -35,5 +38,7 @@ python -m harness run --track pocketful --repo /path/to/this/repo --all --mode i
 ## What a human did
 
 Wrote `mandates/`, `README.md` and `FACTORY.md`, and sent one message to `@Lead`.
-Everything under `stage-*/` and `verification/` was written by the seats; `git log
---format='%an %s'` shows which seat wrote each commit.
+Everything under `stage-*/` and `verification/` was written by the seats. A human
+copied `verification/` in from the Second Reader's repository and added `room.json`,
+because the run was stopped before the Lead did so. All four seat commits are
+authored by Lead; see `FACTORY.md` for why that is a weakness.

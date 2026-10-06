@@ -7,26 +7,40 @@
 > a gap in the requirements, and the lead rules on it by quoting the requirements word
 > for word.
 
-<!-- Every TODO(after run) below is filled from the submitted run's room.json, git log
-     and harness output. Nothing in this file is estimated. -->
+> **Result of the submitted run, stated first: the factory did not complete stage 1.**
+> The committed `stage-1/` does not compile, so it does not start, and the official
+> harness scores it stage 0. Two of five seats never acted, no divergence was ever
+> compared, and `harness check` fails gate 2. The sections below describe the design
+> as intended and then, under each heading, what actually happened. Nothing here is
+> estimated; where something was not measured it says so.
 
 ## Seat setup
 
-Five seats, all Band **Remote Agents** driven through `band-sdk[opencode]`
-(`OpencodeAdapter`) by one local OpenCode server, with models served by Featherless.
+Five seats. In the submitted run they ran as **Band Desktop-hosted OpenCode seats**
+(OpenCode 2.0.22, launched by Band Desktop's own daemon), not as SDK-driven Remote
+Agents as first designed. Models were served by Featherless.
 
-| Seat | Harness / model | Working directory | Writes | Git identity |
+| Seat | Working directory | Writes (by mandate) | Model in the mandate | Model the directory's OpenCode config selects |
 |---|---|---|---|---|
-| Lead | OpenCode / `moonshotai/Kimi-K2.5` | `band-work/` | rulings, ambiguity ledger, stage folders (copy only) | `Lead <lead@factory.invalid>` |
-| Builder | OpenCode / `deepseek-ai/DeepSeek-V3.2` | `band-work/result` | service logic and storage | `Builder <builder@factory.invalid>` |
-| Surface | OpenCode / `deepseek-ai/DeepSeek-V3.2` | `band-work/result` | user-facing surface | `Surface <surface@factory.invalid>` |
-| Second Reader | OpenCode / `moonshotai/Kimi-K2.5` | `band-work/verify` | conformance kit | `Second Reader <second-reader@factory.invalid>` |
-| Referee | OpenCode / `deepseek-ai/DeepSeek-V3.2` | `band-work/` | nothing (read-only by mandate) | `Referee <referee@factory.invalid>` |
+| Lead | `band-work/` | rulings, ledger, stage folders (copy only) | `moonshotai/Kimi-K2.5` | `deepseek-ai/DeepSeek-V3.2` |
+| Builder | `band-work/result` | service logic and storage | `deepseek-ai/DeepSeek-V3.2` | `deepseek-ai/DeepSeek-V3.2` |
+| Surface | `band-work/result` | user-facing surface | `deepseek-ai/DeepSeek-V3.2` | `deepseek-ai/DeepSeek-V3.2` |
+| Second Reader | `band-work/verify` | conformance kit | `moonshotai/Kimi-K2.5` | `moonshotai/Kimi-K2.5` |
+| Referee | `band-work/` | nothing (read-only) | `deepseek-ai/DeepSeek-V3.2` | `deepseek-ai/DeepSeek-V3.2` |
 
-The Builder and the Second Reader are on different model families on purpose: that is
-what makes the two readings fail independently.
+Two caveats about the submitted run that a reader should know before trusting the
+mandates as a description of it:
 
-### Standing it up
+- **The Lead's model does not match its mandate.** `band-work/opencode.json` selects
+  DeepSeek, so the Lead most likely ran on DeepSeek, not Kimi. This is read from the
+  config files, not from a model log.
+- **We could not confirm the Band-hosted seats loaded their mandate files.** The
+  SDK launcher passed each mandate as the seat's standing instruction; the switch to
+  Band-hosted seats happened shortly before the run and we found no equivalent
+  wiring. The Lead's behaviour is consistent with it not having its mandate: it
+  wrote and committed product code, which its mandate forbids.
+
+### Standing it up (the SDK-driven design, as rehearsed)
 
 1. Create five Remote Agents at `app.band.ai/agents` named exactly `Lead`, `Builder`,
    `Surface`, `Second Reader`, `Referee`. Mandate filenames are the seat names with
@@ -105,21 +119,25 @@ carries open items forward. A finished earlier stage outranks a half-built later
 
 ## Measured costs
 
-TODO(after run): per-seat tokens in / out and USD from the `usage` events in
-`room.json` and the Featherless dashboard; wall-clock per stage from the first and
-last commit under each stage folder; share of tokens spent by Second Reader + Referee.
+From `room.json` and the git history of the submitted run.
 
-| Seat | Tokens in | Tokens out | USD |
-|---|---:|---:|---:|
-| Lead | | | |
-| Builder | | | |
-| Surface | | | |
-| Second Reader | | | |
-| Referee | | | |
+| Measure | Value |
+|---|---|
+| Human messages in the room | 1 (the dispatch, 04:04:06 UTC) |
+| Dispatch to first commit | 24 min (04:28 UTC) |
+| Dispatch to the Lead closing the stage | 33 min (04:37 UTC) |
+| Room events | 445 |
+| Tool calls | 188 (Lead 106, Builder 62, Second Reader 20, Surface 0, Referee 0) |
+| Isolated harness checks run by the seats | 3, all failed at the Docker build |
+| Commits | 4, all authored by Lead |
+
+**Tokens and USD were not measured.** The Band-hosted seats did not write usage
+events into `room.json`, and we did not capture the Featherless dashboard for this
+run, so we report no model spend rather than estimate one.
 
 | Stage | Wall-clock | Result |
 |---|---|---|
-| 1 | | |
+| 1 | 33 min to close | does not compile; harness stage 0 |
 
 ## Catch and recover
 
@@ -139,9 +157,23 @@ How bad work is caught, by design:
 
 What it actually caught in the submitted run:
 
-TODO(after run): one row per divergence from `room.json`, with the ruling type, the
-quoted clause, the commit that fixed it and minutes from report to green. If there
-were none, say so.
+**Nothing.** There were no divergences and no rulings, because the comparison never
+ran:
+
+- The Builder's service never compiled, so there was nothing to run the kit against.
+- The Lead never handed anything to the Referee. The Referee and Surface seats joined
+  the room and made zero tool calls.
+- The only checks that caught anything were the three isolated harness runs the Lead
+  started itself. Each failed at the Docker build (missing lockfile, then missing
+  TypeScript compiler, then compile errors). The Lead closed the stage at its time
+  cap with those failures recorded in `stage-1/FINAL_REPORT.md`.
+- The Second Reader did produce a reference model, generators, invariants and a
+  self-test from the spec alone (`verification/`). They were never exercised against
+  a service.
+
+So the catch-and-recover design above is untested by this run. What the run does
+show is the stage cap working: the Lead stopped, committed, and reported honestly
+that the build was red instead of claiming a result.
 
 ## Portability
 
@@ -158,14 +190,30 @@ shown by inspection and by the scanner, not by a second result.
 - **No completed rehearsal** before the submitted run (see above).
 - **Two model families is weak independence.** Both can share a misreading; a ruling
   only happens when they disagree.
-- **Time-boxed.** The dispatch capped the run at 8 hours and excluded stage 4.
-- TODO(after run): stages not reached, open deferrals from the Lead's final report.
+- **Stage 1 not reached.** Stages 2 to 4 not attempted. The Lead's ten deferrals are
+  in `stage-1/FINAL_REPORT.md`; the first is "complete all API endpoints".
+- **Gate 2 fails.** Only the Lead posted text messages. Builder and Second Reader
+  worked from their handoffs but never replied with an `@handle`, so there is no
+  two-way exchange in `room.json`.
+- **Provenance is weak.** All four commits are authored by Lead, including product
+  code, so the git history does not show the split of work the design intends.
+- **The run was cut to 45 minutes** (30 to a first green build), down from the 8
+  hours first planned, and stopped by the human at the cap while the Builder was
+  still editing. Uncommitted work at that point is not in this repository.
 
 ## Final harness output
 
-```text
-python -m harness check --track pocketful <repo>
-python -m harness run --track pocketful --repo <repo> --all --mode isolated --out <new>
-```
+Run against the committed submission.
 
-TODO(after run): paste both outputs, from a fresh clone.
+```text
+$ python -m harness check --track pocketful <repo>
+gate 2: two of your own seats must exchange messages using each other's @handles, with a reply in each direction
+1 problem(s)
+
+$ python -m harness run --track pocketful --repo <repo> --stage 1 --mode isolated --out <new>
+src/database.ts(1,8): error TS2395: Individual declarations in merged declaration 'Database' must be all exported or all local.
+...
+The command '/bin/sh -c npm run build' returned a non-zero code: 2
+highest contiguous stage: 0
+claimed stage: none (a suite passed under 50% of its checks)
+```
