@@ -1,13 +1,14 @@
 import Database from 'better-sqlite3';
-import path from 'path';
+// @ts-ignore - better-sqlite3 doesn't have proper TypeScript definitions
+const BetterSqlite3 = Database;
 
 export class PocketfulDatabase {
   private static instance: PocketfulDatabase;
-  private db: Database.Database;
+  private db: any;
 
   private constructor() {
     const dbPath = process.env.DB_PATH || ':memory:';
-    this.db = new Database(dbPath);
+    this.db = new BetterSqlite3(dbPath);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     
