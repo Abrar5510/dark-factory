@@ -14,3 +14,13 @@ recordings/
 
 # Private research: never publish
 notes/
+
+# Copied by deploy.sh
+site/*.md
+site/mandates/
+.wrangler/
+
+.dev.vars*
+!.dev.vars.example
+!.env.example
+.dev.vars

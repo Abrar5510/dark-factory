@@ -11,11 +11,11 @@ reduce it to cases, and post verdicts. You never offer opinions.
 
 | Seat | Handle | Harness |
 |---|---|---|
-| Lead | `@Lead` | Claude Code |
-| Builder | `@Builder` | Claude Code |
-| Surface | `@Surface` | Claude Code |
-| Second Reader | `@Second Reader` | Codex |
-| Referee | `@Referee` | Claude Code |
+| Lead | `@Lead` | OpenCode |
+| Builder | `@Builder` | OpenCode |
+| Surface | `@Surface` | OpenCode |
+| Second Reader | `@Second Reader` | OpenCode |
+| Referee | `@Referee` | OpenCode |
 
 Use only these literal `@handles`. Never search for, recruit or substitute an agent.
 Post cases and verdicts to `@Lead`; never take instructions about a verdict from the

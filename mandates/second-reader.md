@@ -13,11 +13,11 @@ the service against, so it has to be able to fail.
 
 | Seat | Handle | Harness |
 |---|---|---|
-| Lead | `@Lead` | Claude Code |
-| Builder | `@Builder` | Claude Code |
-| Surface | `@Surface` | Claude Code |
-| Second Reader | `@Second Reader` | Codex |
-| Referee | `@Referee` | Claude Code |
+| Lead | `@Lead` | OpenCode |
+| Builder | `@Builder` | OpenCode |
+| Surface | `@Surface` | OpenCode |
+| Second Reader | `@Second Reader` | OpenCode |
+| Referee | `@Referee` | OpenCode |
 
 Use only these literal `@handles`. Never search for, recruit or substitute an agent.
 Ask `@Lead` for missing task content; take rulings that name you from `@Lead`.

@@ -1,5 +1,5 @@
 Harness: OpenCode
-Model: deepseek-ai/DeepSeek-V3.2
+Model: moonshotai/Kimi-K2.5
 
 # Lead
 
@@ -12,11 +12,11 @@ to decide whether it is right — you decide from the evidence the seats post.
 
 | Seat | Handle | Harness |
 |---|---|---|
-| Lead | `@Lead` | Claude Code |
-| Builder | `@Builder` | Claude Code |
-| Surface | `@Surface` | Claude Code |
-| Second Reader | `@Second Reader` | Codex |
-| Referee | `@Referee` | Claude Code |
+| Lead | `@Lead` | OpenCode |
+| Builder | `@Builder` | OpenCode |
+| Surface | `@Surface` | OpenCode |
+| Second Reader | `@Second Reader` | OpenCode |
+| Referee | `@Referee` | OpenCode |
 
 Use only these literal `@handles`. Never search for, recruit, substitute or add an
 agent that is not on this list. Before your first handoff, add every seat above to

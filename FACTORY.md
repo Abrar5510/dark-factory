@@ -1,110 +1,171 @@
-# FACTORY.md — Pocketful Dark Factory
+# FACTORY.md — Double-Blind
 
-<!-------------------------------------------------------------------->
+> **Specify it twice, blind. Neither side is presumed right.**
+> One seat builds the service. A second seat, on a different model family and unable
+> to see the first, builds an executable reference from the same requirements. A
+> referee compares them mechanically. Every disagreement is a defect in one of them or
+> a gap in the requirements, and the lead rules on it by quoting the requirements word
+> for word.
+
+<!-- Every TODO(after run) below is filled from the submitted run's room.json, git log
+     and harness output. Nothing in this file is estimated. -->
+
 ## Seat setup
 
-| Seat | Harness / Model | Sandbox mode | Working directory | Git identity |
+Five seats, all Band **Remote Agents** driven through `band-sdk[opencode]`
+(`OpencodeAdapter`) by one local OpenCode server, with models served by Featherless.
+
+| Seat | Harness / model | Working directory | Writes | Git identity |
 |---|---|---|---|---|
-| Lead | OpenCode / `deepseek-ai/DeepSeek-V3.2` | Host (reads both repos) | `band-work/result` + `band-work/verify` | `Lead` <lead@factory.invalid> |
-| Builder | OpenCode / `deepseek-ai/DeepSeek-V3.2` | Host (writes to `band-work/result`) | `band-work/result` | `Builder` <builder@factory.invalid> |
-| Surface | OpenCode / `deepseek-ai/DeepSeek-V3.2` | Host (writes to `band-work/result`) | `band-work/result` | `Surface` <surface@factory.invalid> |
-| Second Reader | OpenCode / `moonshotai/Kimi-K2.5` | Host (writes to `band-work/verify`) | `band-work/verify` | `Second Reader` <2r@factory.invalid> |
-| Referee | OpenCode / `deepseek-ai/DeepSeek-V3.2` | Host (read-only, both repos) | `band-work/result` + `band-work/verify` | `Referee` <referee@factory.invalid> |
+| Lead | OpenCode / `moonshotai/Kimi-K2.5` | `band-work/` | rulings, ambiguity ledger, stage folders (copy only) | `Lead <lead@factory.invalid>` |
+| Builder | OpenCode / `deepseek-ai/DeepSeek-V3.2` | `band-work/result` | service logic and storage | `Builder <builder@factory.invalid>` |
+| Surface | OpenCode / `deepseek-ai/DeepSeek-V3.2` | `band-work/result` | user-facing surface | `Surface <surface@factory.invalid>` |
+| Second Reader | OpenCode / `moonshotai/Kimi-K2.5` | `band-work/verify` | conformance kit | `Second Reader <second-reader@factory.invalid>` |
+| Referee | OpenCode / `deepseek-ai/DeepSeek-V3.2` | `band-work/` | nothing (read-only by mandate) | `Referee <referee@factory.invalid>` |
 
-**Band Desktop version:** 0.4.10 (or as installed)  
-**Docker Sandboxes:** moot — OpenCode seats cannot be sandboxed (next-steps.md §1). Barrier holds via directory separation + Band mention-scoping + mandates.  
-**Reboot note:** `sudo launchctl config user path "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sdb"` required after sbx install for Band Desktop to see sandboxes (B5).  
-**Per-seat keys:** Featherless API keys stored in `~/band/.featherless.env` and `~/band/.featherless.key`, outside every git repo.  
-**Git authorship:** Each seat's `start-seats.sh` exports `user.name` and `user.email` so `git log --format=%an` shows seat names. No human commits under stage folders.
+The Builder and the Second Reader are on different model families on purpose: that is
+what makes the two readings fail independently.
 
-<!-------------------------------------------------------------------->
+### Standing it up
+
+1. Create five Remote Agents at `app.band.ai/agents` named exactly `Lead`, `Builder`,
+   `Surface`, `Second Reader`, `Referee`. Mandate filenames are the seat names with
+   non-alphanumerics stripped to a slug, and `harness check` matches them.
+2. Install OpenCode **1.18.x** in its own directory. `band-sdk` 4.0.0 speaks the 1.18
+   API; OpenCode 2.x moved the routes and breaks every adapter call.
+3. Put the provider key in the environment of the `opencode serve` process and
+   reference it from the OpenCode config as `{env:FEATHERLESS_API_KEY}`. Start the
+   server on loopback.
+4. Run one adapter process per seat. Each one passes its mandate file as the seat's
+   standing instruction, sets its working directory from the table above, sets
+   `approval_mode="auto_accept"` and a 900 s turn timeout, and exports
+   `GIT_AUTHOR_*` / `GIT_COMMITTER_*` so `git log --format=%an` shows seat names even
+   though several seats commit to one repository.
+5. Keep agent credentials and the provider key outside every git repository.
+6. Create a room, add the five seats, and send the stage task to `@Lead` once.
+
+No seat is sandboxed. Only seats Band Desktop launches itself can be, and these are
+SDK-driven. See [Honest limits](#honest-limits).
+
 ## Design rationale
 
-This is a double-blind factory: the Builder and the Second Reader each receive the *same* requirements but produce independent readings without seeing each other's work. The two readings are compared by the Referee using an executable conformance kit, and every disagreement is ruled as *implementation wrong*, *reference wrong*, or *requirements silent* by quoting the spec verbatim.
+**The failure we designed against is the shared misreading.** In a planner → coder →
+reviewer line, the tests and the code come from one reading of the requirements, so a
+misread clause passes review every time. The track ships only 79 / 35 / 9 / 16 % of
+its graded checks for stages 1–4, so a factory that iterates until the visible checks
+are green stops being measured almost immediately.
 
-- **Different model families:** Builder and Surface use DeepSeek (`deepseek-ai/DeepSeek-V3.2`), while Second Reader uses Moonshot (`moonshotai/Kimi-K2.5`). This ensures the two readings fail independently — the independence mechanism specified in IDEA.md §1-2. The Referee uses the cheapest model (`deepseek-ai/DeepSeek-V3.2`) because its job is mechanical.
-- **Invariants judge concurrent runs:** Shipped checks cover 79% (stage 1), 35% (stage 2), 9% (stage 3), 16% (stage 4) of the graded suites. Past the first stage, hidden tests from the spec are the real metric. The conformance kit covers the remainder by testing invariants (money conservation, idempotency, balance integrity) that hold across all inputs, not just fixed examples.
-- **What was cut:** A custom SDK referee seat, file leases, per-commit message-id trailers, a rotating cross-family judge panel, and LLM screenshot review. These were deemed too much new code for the five-day window.
+Three moves, all of them in the mandates and none of them specific to this track:
 
-<!-------------------------------------------------------------------->
+1. **Two blind readings.** The Lead pastes the complete requirements to the Builder
+   and, separately, to the Second Reader. The Second Reader writes a conformance kit
+   from the text alone: a reference model that answers any input, generators, and
+   invariants. It must seed faults into its own reference and prove its kit catches
+   them, so the oracle is itself tested.
+2. **Mechanical comparison.** The Referee boots the stage folder offline, runs earlier
+   suites, this stage's suite, the next stage's suite (which must fail, or the folder
+   has overreached), then the kit. It reports a divergence as two unattributed
+   behaviours and one minimal input. It never gives an opinion and never fixes code.
+3. **Rule by quotation.** The Lead rules each divergence as *implementation wrong*,
+   *reference wrong* or *requirements silent*, quoting the deciding sentence. The
+   Referee checks the quote with a fixed-string search and rejects a paraphrase. A
+   "silent" ruling picks the reading that preserves stated invariants and goes into
+   an ambiguity ledger. Every ruled case becomes a regression check for later stages.
+
+Why this suits a run with no human in it: ambiguity is the thing a person normally
+resolves. Here it becomes a logged, checkable decision, and a seat cannot win an
+argument by asserting something the requirements do not say.
+
+**Handoffs are self-contained** because a seat only sees messages addressed to it.
+Every mandate requires the full requirements, repository path, committed revision and
+commands run to be pasted, never referenced.
+
+**Stages are time-capped.** At the cap the Lead closes on the last green revision and
+carries open items forward. A finished earlier stage outranks a half-built later one.
+
 ## What we tried that failed
 
-### Toy rehearsal (track: toy — OpenTable clone)
+- **Claude Code and Codex seats in Docker Sandboxes** was the first design: the
+  sandbox would have enforced the barrier between the two readings. We moved every
+  seat to OpenCode on Featherless, and SDK-driven seats cannot be sandboxed, so the
+  barrier is now enforced by working directories, mention scoping and the mandates.
+- **A third model family for the Second Reader** (`MiniMaxAI/MiniMax-M2.5`) returned
+  `capacity_exhausted` on three of three calls. A model that fails unattended is
+  worse than a slower one; the blind pair became DeepSeek and Moonshot.
+- **OpenCode 2.x** with `band-sdk` 4.0.0: different routes, wrapped responses and a
+  forced server password broke the adapter. Pinned 1.18.x.
+- **A long-lived `opencode serve`** started without the key in its environment
+  resolved `{env:…}` to an empty string and failed as "must be signed in".
+- **An escalate-to-human step** in the original scaffold. The rules allow no human
+  input after dispatch, so every mandate now forbids asking and routes blockers to
+  the final report.
+- **The toy rehearsal did not finish.** One partial stage-1 folder scored 2 of 8
+  shipped checks and no later stage was attempted. The submitted run is therefore the
+  first complete run of this factory, and the mandates were not tuned on a rehearsal.
 
-- **Mandate repairs:** The toy track has 3 practice mandates, but our 5 factory mandates also ran against it as the portability proof (FACTORY.md §10). The vocabulary scanner (gate 4) passed with 0 hits across all three tracks (tablekeeper, pocketful, toy).
-- **Stage 1 claimed** in isolated mode with the toy. Stages 2–4 claimed progressively less shipped-check coverage (35%, 9%, 16%).
-- **Divergences:** Several builder misreads and reference misreads were recorded in the toy run, ruled by quoting the spec, and fixed via the room. The ruled cases became permanent regression checks for later stages.
-
-### Scratch pocketful (stages 1–2)
-
-- **Stage 1** claimed in isolated mode after ~230 s first-run Docker warm-up (noted in next-steps.md A7). Shipped-check coverage: 79%.
-- **Stage 2** scratch run completed with 35% shipped-check coverage. The stage-2 UI (browser routes, authorizations, wallet states) was built to the spec but many hidden hotspots remain unexercised.
-- **Mandate vocabulary:** The scratch run confirmed that the mandates contain no snake_case, kebab-case, or /path tokens tied to the task. The vocabulary scanner flags 0 gate-4 problems.
-- **Soak test:** 1 h idle with tasks sent periodically — no dead seats, no socket drops, no rate limit issues.
-
-### Mandate freeze
-
-- `shasum -a 256 mandates/*.md > ~/band/mandates.FROZEN.sha256` — frozen before the submitted run. No edits after this; repairs happen on the toy only.
-
-<!-------------------------------------------------------------------->
 ## Measured costs
 
-| Seat | Tokens (input) | Tokens (output) | $ (USD) | Wall-clock per stage |
-|---|---|---|---|---|
-| Lead | — | — | — | ~5 min (dispatch, checks, rulings) |
-| Builder | — | — | — | ~230 s first run (stage 1), ~90 s subsequent |
-| Surface | — | — | — | ~230 s first run (stage 1), ~90 s subsequent |
-| Second Reader | — | — | — | ~120 s per stage check |
-| Referee | — | — | — | — |
+TODO(after run): per-seat tokens in / out and USD from the `usage` events in
+`room.json` and the Featherless dashboard; wall-clock per stage from the first and
+last commit under each stage folder; share of tokens spent by Second Reader + Referee.
 
-* costs are deliberately left as placeholders — real numbers will be filled in after the submitted run from per-key dashboards (next-steps.md §5). Total spend to date: **< $0.10** (failed attempts never reached the model).
+| Seat | Tokens in | Tokens out | USD |
+|---|---:|---:|---:|
+| Lead | | | |
+| Builder | | | |
+| Surface | | | |
+| Second Reader | | | |
+| Referee | | | |
 
-**Share spent on verification:** ~15% of total token usage (Second Reader checks across all stages).
+| Stage | Wall-clock | Result |
+|---|---|---|
+| 1 | | |
 
-<!-------------------------------------------------------------------->
 ## Catch and recover
 
-| Stage | Divergence type | Description | Minutes to green | Ruled cases |
-|---|---|---|---|---|
-| 1 | implementation wrong | Builder initially omitted idempotency-key validation for the settle endpoint; shipped checks only asserted four write paths. | 25 | 1 |
-| 1 | reference wrong | Second Reader's initial reference model did not conserve money across concurrent writes; fixed by adding state-idempotent replay. | 18 | 1 |
-| 2 | requirements silent | Ambiguous: whether `available` should include or exclude held money in the authorization UI state. Resolved by choosing the reading that preserves the stated invariant: available = total - held. | 12 | 1 |
-| 2 | implementation wrong | Builder's pay form re-rendered on refresh, clearing user inputs; fixed by using client fetch and in-place DOM updates. | 30 | 1 |
+How bad work is caught, by design:
 
-**Second Reader's seeded-fault kill rate:** All seeded faults in the conformance kit were caught by the generators and invariants on the first pass.
+| Bad work | Caught by | Recovery |
+|---|---|---|
+| Builder misread a requirement | kit diverges from the service | ruling quoting the clause, fix, case kept as a regression check |
+| Second Reader misread a requirement | same divergence, ruled the other way | reference corrected from the quoted clause |
+| Requirements are ambiguous | neither quote decides it | invariant-preserving reading chosen, recorded in the ambiguity ledger |
+| Ruling not grounded in the text | Referee's fixed-string search on the quote | ruling rejected and returned to the Lead |
+| Stage N breaks stage N−1 | earlier suites and ruled cases replayed on every revision | revision rejected |
+| Folder implements stage N+1 | next-stage suite passes when it must fail | folder claims nothing until trimmed |
+| Service needs the network | clean offline boot in isolated mode | revision rejected |
+| Weak oracle | Second Reader's own seeded faults survive | Second Reader rejects its own kit |
+| Stalled seat or stage | stage time cap | close on last green revision, defer the rest |
 
-**Shipped-check coverage directionality:** Stage 1: 79% (directionally OK). Stages 2-4: green on shipped checks is directional feedback only — the real oracle is the hidden test suite.
+What it actually caught in the submitted run:
 
-**Ambiguity ledger size:** 3 ruled cases (across stages 1-2), documented with verbatim spec quotes and chosen readings.
+TODO(after run): one row per divergence from `room.json`, with the ruling type, the
+quoted clause, the commit that fixed it and minutes from report to green. If there
+were none, say so.
 
-<!-------------------------------------------------------------------->
-## Portability proof
+## Portability
 
-The same frozen mandates (`mandates/`, hash-verified against `~/band/mandates.FROZEN.sha256`) ran the official `toy` track end to end:
+The mandates name no endpoint, field, error code or product. `harness check` reports
+no vocabulary problems for these five files against all three tracks (`pocketful`,
+`tablekeeper`, `toy`). We did not complete a second build with them, so portability is
+shown by inspection and by the scanner, not by a second result.
 
-- Toy repo: `~/band/band-work/toy-result`
-- All 5 stages claimed in isolated mode (`claimed stage: N` for N=1..4)
-- `harness check --track toy` passes: ok, gates 1, 2 and the mandate part of gate 4 pass
-- The toy run served as the portability proof mandated by the guide: "run the same, unchanged mandates on the official toy track and report it"
-
-!commands
-`python -m harness check ~/band/band-work/toy-result --track toy` → `ok — gates 1, 2 …`
-
-<!-------------------------------------------------------------------->
 ## Honest limits
 
-| Limit | Detail |
-|---|---|
-| Stages not reached | Stages 3 and 4 were not attempted in the scratch run due to time caps (6 h for stage 3, 5 h for stage 4). The chain stopped at stage 2. |
-| Correlated misreads | The builder and surface seats may have shared a misreading of the authorization TTL spec; the different model families (DeepSeek vs Moonshot) are the mitigation. |
-| Open deferrals | Idempotency-key validation for the settle endpoint, and several authorization TTL edge cases, carry forward as costed deferrals. |
-| Shipped-check coverage | 79% / 35% / 9% / 16% across stages 1-4. Green on shipped checks is directional; the conformance kit covers the remainder. |
+- **The barrier is conventional, not enforced.** Nothing technically stops the
+  Builder opening `band-work/verify`. `room.json` and the git history are the evidence
+  of whether it held.
+- **No completed rehearsal** before the submitted run (see above).
+- **Two model families is weak independence.** Both can share a misreading; a ruling
+  only happens when they disagree.
+- **Time-boxed.** The dispatch capped the run at 8 hours and excluded stage 4.
+- TODO(after run): stages not reached, open deferrals from the Lead's final report.
 
-<!-------------------------------------------------------------------->
-## Final harness run output
+## Final harness output
 
 ```text
-python -m harness run --track pocketful --repo <result> --all --mode isolated --out <new>
+python -m harness check --track pocketful <repo>
+python -m harness run --track pocketful --repo <repo> --all --mode isolated --out <new>
 ```
 
-*(will be pasted after the submitted run completes — the output shows each folder claims its stage, contiguous from stage 1)*
+TODO(after run): paste both outputs, from a fresh clone.
