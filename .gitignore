@@ -1,0 +1,4 @@
+.env
+agent_config.yaml
+*.pem
+.DS_Store
