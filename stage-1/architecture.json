@@ -1,0 +1,65 @@
+{
+  "kind": "layered",
+  "title": "Pocketful Stage 1 Architecture",
+  "layers": [
+    {
+      "id": "api",
+      "title": "API Layer",
+      "items": [
+        { "id": "auth_endpoints", "label": "Authentication Endpoints" },
+        { "id": "user_endpoints", "label": "User Endpoints" },
+        { "id": "payment_endpoints", "label": "Payment Endpoints" },
+        { "id": "request_endpoints", "label": "Request Endpoints" },
+        { "id": "split_endpoints", "label": "Split Endpoints" },
+        { "id": "settlement_endpoints", "label": "Settlement Endpoints" },
+        { "id": "activity_endpoints", "label": "Activity Endpoints" },
+        { "id": "test_endpoints", "label": "Test Endpoints" }
+      ]
+    },
+    {
+      "id": "business",
+      "title": "Business Logic Layer",
+      "items": [
+        { "id": "auth_service", "label": "Authentication Service" },
+        { "id": "payment_service", "label": "Payment Service" },
+        { "id": "request_service", "label": "Request Service" },
+        { "id": "split_service", "label": "Split Service" },
+        { "id": "settlement_service", "label": "Settlement Service" },
+        { "id": "feed_service", "label": "Activity Feed Service" },
+        { "id": "idempotency_service", "label": "Idempotency Service" },
+        { "id": "balance_service", "label": "Balance Service" }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data Layer",
+      "items": [
+        { "id": "user_repository", "label": "User Repository" },
+        { "id": "payment_repository", "label": "Payment Repository" },
+        { "id": "request_repository", "label": "Request Repository" },
+        { "id": "split_repository", "label": "Split Repository" },
+        { "id": "settlement_repository", "label": "Settlement Repository" },
+        { "id": "idempotency_repository", "label": "Idempotency Repository" },
+        { "id": "database", "label": "SQLite Database" }
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "title": "Infrastructure Layer",
+      "items": [
+        { "id": "express_server", "label": "Express HTTP Server" },
+        { "id": "middleware", "label": "Middleware Stack" },
+        { "id": "error_handler", "label": "Error Handler" },
+        { "id": "validation", "label": "Request Validation" },
+        { "id": "transaction_manager", "label": "Transaction Manager" }
+      ]
+    }
+  ],
+  "flows": [
+    { "from": "api", "to": "business", "label": "Request Routing" },
+    { "from": "business", "to": "data", "label": "Data Operations" },
+    { "from": "data", "to": "database", "label": "SQL Queries" },
+    { "from": "infrastructure", "to": "api", "label": "HTTP Handling" },
+    { "from": "business", "to": "infrastructure", "label": "Error Responses" }
+  ]
+}

@@ -24,3 +24,5 @@ site/mandates/
 !.dev.vars.example
 !.env.example
 .dev.vars
+agent_config.yaml
+*.pem
